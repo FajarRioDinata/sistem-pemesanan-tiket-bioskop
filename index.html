@@ -1,0 +1,785 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Sistem Pemesanan Tiket Bioskop - QR Code</title>
+    <!-- Library untuk generate QR Code (murni JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <!-- Library untuk scan QR Code via kamera -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Poppins', 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fef7e0 0%, #f9eec1 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(120deg, #b83b2d, #d45a2b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #9b5e2c;
+            margin-top: 8px;
+        }
+
+        /* Layout utama */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        /* Panel kiri: daftar film + QR tiket */
+        .movies-panel {
+            flex: 2;
+            min-width: 280px;
+            background: #fffaf2;
+            border-radius: 28px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            padding: 20px 20px 25px;
+            transition: all 0.2s;
+        }
+
+        /* Panel kanan: scanner & pemesanan */
+        .scanner-panel {
+            flex: 1.5;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            padding: 20px;
+            transition: 0.2s;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: #7a3e1f;
+            border-left: 5px solid #e67e22;
+            padding-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #fbe9d2;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #c45a1b;
+        }
+
+        /* Grid film */
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .movie-card {
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid #f3e5c9;
+            padding: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.05);
+            border-color: #f7cf9f;
+        }
+
+        .movie-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .movie-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #964b1e;
+        }
+
+        .movie-code {
+            font-family: monospace;
+            background: #f9e5cf;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #b35725;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            margin: 12px 0;
+            background: white;
+            padding: 8px;
+            border-radius: 18px;
+        }
+
+        canvas.qr-canvas {
+            background: white;
+            border-radius: 16px;
+            width: 110px;
+            height: 110px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .booking-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+
+        .status-booked {
+            background: #e0f2e9;
+            color: #1f7840;
+        }
+
+        .status-available {
+            background: #ffe5cf;
+            color: #b6531a;
+        }
+
+        .delete-movie {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #d9976b;
+            transition: 0.2s;
+        }
+
+        .delete-movie:hover {
+            color: #e63946;
+        }
+
+        /* tombol umum */
+        button {
+            background: #d45a2b;
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+
+        button.outline {
+            background: transparent;
+            border: 1px solid #d45a2b;
+            color: #d45a2b;
+        }
+
+        button.outline:hover {
+            background: #ffefe5;
+        }
+
+        button.danger {
+            background: #b91c1c;
+        }
+
+        button.danger:hover {
+            background: #991b1b;
+        }
+
+        button.small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .qr-reader-area {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        #qr-reader {
+            width: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 2px dashed #f5cfaa;
+            background: #fff8f0;
+        }
+
+        .scanner-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .booking-table {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #f3e1cd;
+        }
+
+        th {
+            color: #b85c1a;
+            font-weight: 600;
+        }
+
+        .empty-row {
+            text-align: center;
+            color: #cb8b55;
+            padding: 24px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.75rem;
+            color: #b57642;
+        }
+        @media (max-width: 780px) {
+            .dashboard {
+                flex-direction: column;
+            }
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #392c24;
+            color: #ffedd5;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎬 SISTEM PEMESANAN TIKET BIOSKOP · QR CODE</h1>
+        <p>Scan QR Code tiket → validasi dan catat pemesanan secara realtime</p>
+    </div>
+
+    <div class="dashboard">
+        <!-- Kiri: Daftar Film / Tiket + QR Code -->
+        <div class="movies-panel">
+            <div class="card-title">
+                <span>🎞️ Daftar Film & Tiket QR</span>
+                <span class="badge" id="total-movies">0 film</span>
+            </div>
+            <div class="toolbar">
+                <button id="tambahFilmBtn">➕ Tambah Film</button>
+                <button id="resetSemuaDataBtn" class="outline small">🔄 Reset Semua Data</button>
+            </div>
+            <div id="moviesGrid" class="movies-grid">
+                <div style="text-align:center; padding:40px;">Memuat daftar film...</div>
+            </div>
+        </div>
+
+        <!-- Kanan: Scanner + Log Pemesanan -->
+        <div class="scanner-panel">
+            <div class="card">
+                <div class="card-title">🎟️ Scanner Tiket QR</div>
+                <div id="qr-reader" style="width:100%;"></div>
+                <div class="scanner-actions">
+                    <button id="startScanBtn">▶ Mulai Scan</button>
+                    <button id="stopScanBtn" class="outline">⏹ Berhenti</button>
+                </div>
+                <p style="font-size:0.75rem; margin-top:12px; text-align:center; color:#c36b2f;">Arahkan QR Code tiket ke kamera → pemesanan otomatis tervalidasi</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    📋 Pemesanan Tiket Hari Ini
+                    <div>
+                        <button id="resetPemesananBtn" class="small outline">🗑 Reset Pemesanan Hari Ini</button>
+                        <button id="exportCSVBtn" class="small outline">📎 Export CSV</button>
+                    </div>
+                </div>
+                <div class="booking-table">
+                    <table id="bookingTable">
+                        <thead>
+                            <tr><th>Kode Film</th><th>Judul Film</th><th>Waktu Pemesanan</th></tr>
+                        </thead>
+                        <tbody id="bookingTbody">
+                            <tr><td colspan="3" class="empty-row">Belum ada pemesanan tiket hari ini</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>⭐ Sistem pemesanan tiket bioskop berbasis QR — setiap film memiliki tiket unik (TICKET:kode). Scan → catat waktu booking.</footer>
+</div>
+<div id="notification" class="notification" style="display:none;"></div>
+
+<script>
+    // ----------------------------- DATA & STORAGE (Film & Pemesanan) ---------------------------------
+    let movies = [];        // { code, title }
+    let bookings = [];      // { code, timestamp, date (YYYY-MM-DD) }
+
+    // Storage keys
+    const STORAGE_MOVIES = "tiket_bioskop_movies";
+    const STORAGE_BOOKINGS = "tiket_bioskop_bookings";
+
+    // Helper: tanggal hari ini
+    function getTodayStr() {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+
+    function saveMovies() {
+        localStorage.setItem(STORAGE_MOVIES, JSON.stringify(movies));
+    }
+    function saveBookings() {
+        localStorage.setItem(STORAGE_BOOKINGS, JSON.stringify(bookings));
+    }
+
+    // Load data awal
+    function loadInitialData() {
+        const storedMovies = localStorage.getItem(STORAGE_MOVIES);
+        if (storedMovies) {
+            movies = JSON.parse(storedMovies);
+        } else {
+            // Data default film bioskop
+            movies = [
+                { code: "MOV001", title: "Avatar: The Way of Water" },
+                { code: "MOV002", title: "Spider-Man: Across the Spider-Verse" },
+                { code: "MOV003", title: "Oppenheimer" },
+                { code: "MOV004", title: "John Wick: Chapter 4" }
+            ];
+            saveMovies();
+        }
+
+        const storedBookings = localStorage.getItem(STORAGE_BOOKINGS);
+        if (storedBookings) {
+            bookings = JSON.parse(storedBookings);
+        } else {
+            bookings = [];
+            saveBookings();
+        }
+    }
+
+    // Cek apakah film sudah dipesan hari ini
+    function isAlreadyBookedToday(code) {
+        const today = getTodayStr();
+        return bookings.some(booking => booking.code === code && booking.date === today);
+    }
+
+    // Pemesanan tiket (booking)
+    function bookTicket(code, autoNotify = true) {
+        const movie = movies.find(m => m.code === code);
+        if (!movie) {
+            showNotif(`❌ Kode film ${code} tidak terdaftar!`, 2000);
+            return false;
+        }
+        if (isAlreadyBookedToday(code)) {
+            showNotif(`⚠️ Tiket untuk film "${movie.title}" (${code}) sudah dipesan hari ini!`, 1800);
+            return false;
+        }
+        const now = new Date();
+        const timestamp = now.toISOString();
+        const date = getTodayStr();
+        bookings.push({ code, timestamp, date });
+        saveBookings();
+        showNotif(`✅ Tiket berhasil dipesan! Film: ${movie.title} | Pukul ${now.toLocaleTimeString('id-ID')}`, 2000);
+        renderAll();
+        return true;
+    }
+
+    // Reset pemesanan hari ini
+    function resetTodayBookings() {
+        const today = getTodayStr();
+        const beforeCount = bookings.length;
+        bookings = bookings.filter(b => b.date !== today);
+        if (beforeCount !== bookings.length) {
+            saveBookings();
+            showNotif(`🗑️ Pemesanan tiket hari ini telah direset`, 1500);
+            renderAll();
+        } else {
+            showNotif(`ℹ️ Belum ada pemesanan tiket hari ini`, 1200);
+        }
+    }
+
+    // Export CSV (pemesanan hari ini)
+    function exportBookingCSV() {
+        const today = getTodayStr();
+        const todayBookings = bookings.filter(b => b.date === today);
+        if (todayBookings.length === 0) {
+            showNotif("Tidak ada data pemesanan untuk diekspor", 1500);
+            return;
+        }
+        let csvRows = [["Kode Film", "Judul Film", "Waktu Pemesanan (ISO)", "Jam Lokal"]];
+        for (const booking of todayBookings) {
+            const movie = movies.find(m => m.code === booking.code);
+            const movieTitle = movie ? movie.title : "Tidak dikenal";
+            const dateObj = new Date(booking.timestamp);
+            const localTime = dateObj.toLocaleString('id-ID');
+            csvRows.push([booking.code, movieTitle, booking.timestamp, localTime]);
+        }
+        const csvContent = csvRows.map(row => row.join(",")).join("\n");
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute("download", `pemesanan_tiket_${today}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showNotif("📁 CSV berhasil diunduh", 1500);
+    }
+
+    // CRUD Film
+    function addMovie(code, title) {
+        if (!code || !title) {
+            showNotif("Kode film dan judul harus diisi!", 1500);
+            return false;
+        }
+        code = code.trim().toUpperCase();
+        title = title.trim();
+        if (movies.some(m => m.code === code)) {
+            showNotif(`Kode film ${code} sudah terdaftar!`, 1500);
+            return false;
+        }
+        movies.push({ code, title });
+        saveMovies();
+        renderAll();
+        showNotif(`🎬 Film "${title}" (${code}) ditambahkan`, 1800);
+        return true;
+    }
+
+    function deleteMovie(code) {
+        const movie = movies.find(m => m.code === code);
+        if (!movie) return;
+        if (confirm(`Hapus film "${movie.title}" (${code}) ?\nSeluruh riwayat pemesanan tiket film ini juga akan dihapus.`)) {
+            movies = movies.filter(m => m.code !== code);
+            // Hapus juga booking yang terkait
+            bookings = bookings.filter(b => b.code !== code);
+            saveMovies();
+            saveBookings();
+            renderAll();
+            showNotif(`🗑️ Film "${movie.title}" telah dihapus`, 1500);
+        }
+    }
+
+    function resetAllData() {
+        if (confirm("⚠️ RESET TOTAL: Semua film dan seluruh data pemesanan akan dihapus dan dikembalikan ke default. Lanjutkan?")) {
+            movies = [
+                { code: "MOV001", title: "Avatar: The Way of Water" },
+                { code: "MOV002", title: "Spider-Man: Across the Spider-Verse" },
+                { code: "MOV003", title: "Oppenheimer" },
+                { code: "MOV004", title: "John Wick: Chapter 4" }
+            ];
+            bookings = [];
+            saveMovies();
+            saveBookings();
+            renderAll();
+            showNotif("🔄 Data telah direset ke default bioskop", 1800);
+        }
+    }
+
+    // ------------------------------ RENDER QR + FILM + TABEL ---------------------------------
+    function drawQRCodeToCanvas(canvasElement, text) {
+        if (!canvasElement) return;
+        try {
+            const qr = qrcode(0, 'M');
+            qr.addData(text);
+            qr.make();
+            const cellSize = 3;
+            const margin = 2;
+            const qrSize = qr.getModuleCount();
+            const canvasSize = (qrSize + margin * 2) * cellSize;
+            canvasElement.width = canvasSize;
+            canvasElement.height = canvasSize;
+            const ctx = canvasElement.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
+            ctx.fillStyle = '#000000';
+            for (let row = 0; row < qrSize; row++) {
+                for (let col = 0; col < qrSize; col++) {
+                    if (qr.isDark(row, col)) {
+                        ctx.fillRect((col + margin) * cellSize, (row + margin) * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn("QR gen error", err);
+        }
+    }
+
+    function renderAll() {
+        renderMoviesGrid();
+        renderBookingTable();
+        document.getElementById("total-movies").innerText = movies.length + " film";
+    }
+
+    function renderMoviesGrid() {
+        const container = document.getElementById("moviesGrid");
+        if (!container) return;
+        if (movies.length === 0) {
+            container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px;">Belum ada film. Klik "Tambah Film" untuk menambahkan.</div>`;
+            return;
+        }
+        const today = getTodayStr();
+        let html = '';
+        for (const movie of movies) {
+            const booked = isAlreadyBookedToday(movie.code);
+            const statusText = booked ? "✅ Tiket Terpesan" : "🎫 Tersedia";
+            const statusClass = booked ? "status-booked" : "status-available";
+            const qrText = `TICKET:${movie.code}`;
+            html += `
+                <div class="movie-card" data-code="${movie.code}">
+                    <div class="movie-info">
+                        <span class="movie-title">${escapeHtml(movie.title)}</span>
+                        <span class="movie-code">${movie.code}</span>
+                        <button class="delete-movie" data-code="${movie.code}" title="Hapus film">🗑️</button>
+                    </div>
+                    <div class="qr-container">
+                        <canvas class="qr-canvas" data-qrtext="${qrText}" style="width:110px; height:110px;"></canvas>
+                    </div>
+                    <div class="booking-status">
+                        <span>Status Tiket:</span>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+
+        // Generate QR untuk setiap canvas
+        const canvases = container.querySelectorAll('.qr-canvas');
+        canvases.forEach(canvas => {
+            const text = canvas.getAttribute('data-qrtext');
+            if (text) drawQRCodeToCanvas(canvas, text);
+        });
+
+        // Event hapus film
+        container.querySelectorAll('.delete-movie').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const code = btn.getAttribute('data-code');
+                if (code) deleteMovie(code);
+            });
+        });
+    }
+
+    function renderBookingTable() {
+        const tbody = document.getElementById("bookingTbody");
+        if (!tbody) return;
+        const today = getTodayStr();
+        const todayBookings = bookings.filter(b => b.date === today);
+        if (todayBookings.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="empty-row">✨ Belum ada pemesanan tiket hari ini ✨</td></tr>`;
+            return;
+        }
+        // urutkan dari terbaru
+        todayBookings.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        let rows = '';
+        for (const booking of todayBookings) {
+            const movie = movies.find(m => m.code === booking.code);
+            const title = movie ? movie.title : "❓ Film tidak dikenal";
+            const waktu = new Date(booking.timestamp).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+            rows += `<tr><td>${booking.code}</td><td>${escapeHtml(title)}</td><td>🕒 ${waktu}</td></tr>`;
+        }
+        tbody.innerHTML = rows;
+    }
+
+    // helper notifikasi & escape
+    let notifTimeout;
+    function showNotif(msg, duration = 2000) {
+        const notifDiv = document.getElementById("notification");
+        if (notifTimeout) clearTimeout(notifTimeout);
+        notifDiv.innerText = msg;
+        notifDiv.style.display = "block";
+        notifTimeout = setTimeout(() => {
+            notifDiv.style.display = "none";
+        }, duration);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // ----------------------------- QR SCANNER (KAMERA) ------------------------------------
+    let html5QrCode = null;
+    let isScanning = false;
+
+    async function startScanner() {
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("qr-reader");
+        }
+        if (isScanning) {
+            showNotif("Scanner sudah aktif", 1000);
+            return;
+        }
+        try {
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                },
+                (decodedText) => {
+                    handleScannedQR(decodedText);
+                },
+                (errorMessage) => { /* diam */ }
+            );
+            isScanning = true;
+            showNotif("🔍 Kamera menyala, arahkan ke QR Code tiket bioskop", 2000);
+        } catch (err) {
+            console.error("Gagal memulai kamera:", err);
+            showNotif("⚠️ Tidak dapat mengakses kamera. Pastikan izin diberikan.", 4000);
+        }
+    }
+
+    async function stopScanner() {
+        if (html5QrCode && isScanning) {
+            try {
+                await html5QrCode.stop();
+                isScanning = false;
+                showNotif("📷 Scanner dimatikan", 1200);
+            } catch (err) {
+                console.warn(err);
+            }
+        } else {
+            showNotif("Scanner tidak berjalan", 1000);
+        }
+    }
+
+    function handleScannedQR(qrText) {
+        // Format QR: TICKET:KODE_FILM (contoh: TICKET:MOV001)
+        if (qrText && qrText.startsWith("TICKET:")) {
+            const code = qrText.substring(7); // setelah "TICKET:"
+            if (code.length > 0) {
+                bookTicket(code, true);
+            } else {
+                showNotif("QR tidak valid: kode film kosong", 1500);
+            }
+        } else {
+            showNotif("QR tidak dikenali! Harus berformat 'TICKET:KODE_FILM'", 1500);
+        }
+    }
+
+    // ----------------------------- INIT & EVENT LISTENER --------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+        loadInitialData();
+        renderAll();
+
+        document.getElementById("tambahFilmBtn").addEventListener("click", () => {
+            let code = prompt("Masukkan kode film (unik, contoh: MOV005):");
+            if (!code) return;
+            code = code.trim().toUpperCase();
+            const title = prompt("Masukkan judul film:");
+            if (!title) return;
+            addMovie(code, title);
+        });
+
+        document.getElementById("resetPemesananBtn").addEventListener("click", () => {
+            resetTodayBookings();
+        });
+        document.getElementById("exportCSVBtn").addEventListener("click", () => {
+            exportBookingCSV();
+        });
+        document.getElementById("resetSemuaDataBtn").addEventListener("click", () => {
+            resetAllData();
+        });
+        document.getElementById("startScanBtn").addEventListener("click", () => {
+            startScanner();
+        });
+        document.getElementById("stopScanBtn").addEventListener("click", () => {
+            stopScanner();
+        });
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if (html5QrCode && isScanning) {
+            html5QrCode.stop().catch(e => console.log);
+        }
+    });
+</script>
+</body>
+</html>
+```
