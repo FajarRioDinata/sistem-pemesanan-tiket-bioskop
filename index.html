@@ -5,10 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>CineTicket+ | All-in-One Bioskop Pemesanan</title>
-  <!-- Library untuk PDF & Canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Font Awesome untuk ikon -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
@@ -27,17 +25,12 @@
     .cinema-container {
       max-width: 1500px;
       margin: 0 auto;
-      background: rgba(18, 24, 34, 0.75);
+      background: rgba(18, 24, 34, 0.85);
       backdrop-filter: blur(2px);
       border-radius: 2.5rem;
       box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
       padding: 1.8rem;
       border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
     }
 
     .header h1 {
@@ -48,208 +41,64 @@
       -webkit-background-clip: text;
       color: transparent;
     }
-
-    .booking-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
+    .header p {
+      color: #ffffff !important;
     }
 
-    .left-panel {
-      flex: 2;
-      min-width: 300px;
+    /* Semua teks dasar menjadi putih */
+    body, .cinema-container, .card, .card-title, .summary-line, .selected-seats-list, 
+    label, .summary-total, .legend-item, .seat, .row-label, .col-num, button, input, select, 
+    .food-item, .toast, #reviewsList, #avgRatingDisplay, .radio-group label {
+      color: #ffffff !important;
     }
 
-    .right-panel {
-      flex: 1.3;
-      min-width: 320px;
-      background: rgba(10, 14, 23, 0.7);
-      border-radius: 1.8rem;
-      padding: 1.5rem;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Background elemen form disesuaikan agar gelap dengan teks putih */
+    select, input, .radio-group, .food-item input {
+      background: #1E2532 !important;
+      border: 1px solid #4a5568 !important;
+      color: #ffffff !important;
     }
-
-    .card {
-      background: #11161f;
-      border-radius: 1.5rem;
-      padding: 1.2rem 1.5rem;
-      margin-bottom: 1.8rem;
-      border: 1px solid #2a2f3c;
-    }
-
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      color: #FFDE9C;
-      border-left: 4px solid #F4B836;
-      padding-left: 12px;
-    }
-
-    select, input, .radio-group {
-      width: 100%;
-      background: #1E2532;
-      border: 1px solid #323a48;
-      padding: 12px 16px;
-      border-radius: 1rem;
-      color: #f0f3fa;
-      font-size: 0.9rem;
-      outline: none;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #b9c3db;
-    }
-
-    /* Denah kursi */
-    .screen {
-      background: #232a36;
-      text-align: center;
-      padding: 8px;
-      border-radius: 30px;
-      margin: 15px 0;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-
-    .seat-map-wrapper {
-      overflow-x: auto;
-      padding: 5px 0;
-    }
-
-    .col-header {
-      display: flex;
-      margin-left: 38px;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .col-header .col-num {
-      width: 44px;
-      text-align: center;
-      font-size: 13px;
-      font-weight: bold;
-      color: #8e9bb5;
-    }
-    .seat-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .row-label {
-      width: 38px;
-      font-weight: 700;
-      color: #FFD966;
-      background: #1a202c;
-      border-radius: 12px;
-      text-align: center;
-      padding: 6px 0;
-    }
-    .seats {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .seat {
-      width: 44px;
-      height: 44px;
-      border-radius: 16px 16px 12px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.1s;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      border-bottom: 3px solid #1f2532;
-    }
-    .seat.available { background: #2b6e4c; color: white; }
-    .seat.selected { background: linear-gradient(145deg, #F4B836, #E09D1E); color: #1e1b13; border-bottom-color: #b47c10; }
-    .seat.booked { background: #4a3b2c; color: #8f7a60; cursor: not-allowed; text-decoration: line-through; }
-    .seat.vip { background: #9b59b6; }
-    .seat.loveseat { background: #e67e22; }
-    .seat.available:hover { transform: scale(1.03); filter: brightness(1.1);}
-
-    .legend {
-      display: flex;
-      gap: 15px;
-      margin-top: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.7rem;
-    }
-    .legend-box {
-      width: 24px;
-      height: 24px;
-      border-radius: 8px;
-    }
-
-    /* Makanan */
-    .food-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      padding: 6px 0;
-      border-bottom: 1px dashed #2a3140;
-    }
-    .food-item input { width: 60px; text-align: center; padding: 6px; background: #0c111a; }
-
-    .summary-line {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 0.9rem;
-    }
-    .summary-total {
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: #FFD966;
+    input::placeholder, select option {
+      color: #cccccc !important;
     }
     button {
       background: #F4B836;
-      border: none;
-      padding: 12px;
-      border-radius: 2rem;
+      color: #1e1b13 !important;
       font-weight: bold;
-      width: 100%;
-      margin-top: 10px;
-      cursor: pointer;
-      transition: 0.2s;
     }
-    button:active { transform: translateY(2px);}
-    .btn-secondary { background: #2f3a4b; color: #f2e8cf; }
+    .btn-secondary {
+      background: #2f3a4b;
+      color: #ffffff !important;
+    }
+    .seat.available { background: #2b6e4c; color: white; }
+    .seat.selected { background: linear-gradient(145deg, #F4B836, #E09D1E); color: #1e1b13; }
+    .seat.booked { background: #4a3b2c; color: #cccccc; }
+    .seat.vip { background: #9b59b6; }
+    .seat.loveseat { background: #e67e22; }
+    .card {
+      background: #0f1420;
+      border: 1px solid #2a2f3c;
+    }
+    .summary-line {
+      border-bottom: 1px dashed #334155;
+    }
     .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
       background: #1e2a32;
-      color: #FFDE9C;
-      padding: 12px 20px;
-      border-radius: 40px;
-      box-shadow: 0 4px 12px black;
-      z-index: 1000;
-      animation: fadein 0.3s;
+      color: #FFDE9C !important;
     }
-    @keyframes fadein { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; } }
-    .rating-star { cursor: pointer; font-size: 1.5rem; color: gray; display: inline-block; }
-    .rating-star.active { color: #F4B836; }
-    hr { border-color: #2a3140; margin: 10px 0; }
+    a, .fa, .fas {
+      color: #FFD966;
+    }
+    /* rating star */
+    .rating-star {
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #4a5568;
+      display: inline-block;
+    }
+    .rating-star.active, .rating-star:hover {
+      color: #F4B836 !important;
+    }
   </style>
 </head>
 <body>
@@ -269,8 +118,8 @@
           <select id="movieSelect"></select>
         </div>
         <div class="form-group">
-          <label>📅 Tanggal Tayang</label>
-          <select id="dateSelect"></select>
+          <label>📅 Tanggal Tayang (Kalender)</label>
+          <input type="date" id="dateInput" style="width:100%; padding:12px;">
         </div>
         <div class="form-group">
           <label>⏰ Jam Tayang</label>
@@ -325,15 +174,15 @@
       <div class="form-group">
         <label>🎟️ Kode Promo</label>
         <div style="display:flex; gap:6px;"><input type="text" id="promoCode" placeholder="HEMAT20 / CINEMA10" style="flex:2"><button id="applyPromoBtn" style="width:auto; margin:0; padding:0 12px;">Apply</button></div>
-        <small style="color:#aaa">HEMAT20 (20% off), CINEMA10 (10k off)</small>
+        <small style="color:#dddddd">HEMAT20 (20% off), CINEMA10 (10k off)</small>
       </div>
 
       <div class="form-group">
-        <label>💳 Metode Pembayaran</label>
-        <div id="paymentMethods" class="radio-group" style="display:flex; gap:12px; background:transparent; padding:0;">
-          <label><input type="radio" name="payment" value="Transfer Bank" checked> Transfer Bank</label>
-          <label><input type="radio" name="payment" value="QRIS"> QRIS</label>
-          <label><input type="radio" name="payment" value="E-Wallet"> E-Wallet</label>
+        <label>💳 Metode Pembayaran (berfungsi)</label>
+        <div id="paymentMethods" class="radio-group" style="display:flex; gap:12px; background:transparent; padding:0; flex-wrap:wrap;">
+          <label style="color:white;"><input type="radio" name="payment" value="Transfer Bank" checked> Transfer Bank</label>
+          <label style="color:white;"><input type="radio" name="payment" value="QRIS"> QRIS</label>
+          <label style="color:white;"><input type="radio" name="payment" value="E-Wallet"> E-Wallet</label>
         </div>
       </div>
 
@@ -357,11 +206,11 @@
     <div class="card-title"><i class="fas fa-star"></i> Rating & Ulasan Film Ini</div>
     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
       <div id="ratingStars"></div>
-      <span id="avgRatingDisplay">⭐ Belum ada rating</span>
-      <input type="text" id="reviewText" placeholder="Tulis ulasan singkat..." style="flex:1">
+      <span id="avgRatingDisplay" style="color:white;">⭐ Belum ada rating</span>
+      <input type="text" id="reviewText" placeholder="Tulis ulasan singkat..." style="flex:1; color:white;">
       <button id="submitReviewBtn" class="btn-secondary" style="width:auto;">Kirim Ulasan</button>
     </div>
-    <div id="reviewsList" style="margin-top: 12px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;"></div>
+    <div id="reviewsList" style="margin-top: 12px; max-height: 100px; overflow-y: auto; font-size: 0.8rem; color:#ccc;"></div>
   </div>
 </div>
 
@@ -369,38 +218,29 @@
   // ======================= KONFIGURASI DATA =======================
   const ROWS = ['A', 'B', 'C', 'D', 'E', 'F'];
   const COLS = 8;
-  // Tipe kursi berdasarkan baris: A,B = VIP (+20000), C,D = Standard (+0), E,F = Love Seat (+30000)
   const seatTypeMap = { 'A':'vip', 'B':'vip', 'C':'standard', 'D':'standard', 'E':'loveseat', 'F':'loveseat' };
   const seatExtra = { 'vip':20000, 'standard':0, 'loveseat':30000 };
-  let bookedSeats = ['A3','B5','C2','D7','E4','F6','B8','C6','E1','F3']; // contoh terisi
+  let bookedSeats = ['A3','B5','C2','D7','E4','F6','B8','C6','E1','F3'];
   let selectedSeats = [];
   
-  // Film data (harga base)
   const movies = [
     { title:"Avengers: Endgame", price:50000 },
     { title:"Dune: Part Two", price:55000 },
     { title:"Spider-Man: No Way Home", price:45000 },
     { title:"Oppenheimer", price:60000 }
   ];
-  // Jadwal & Tanggal
-  const dates = ["Hari Ini", "Besok", "Lusa"];
   const times = ["10:30", "13:45", "16:00", "19:30", "22:15"];
   
-  // Makanan
   const foodItems = [
     { name:"Popcorn Regular", price:25000, qty:0 },
     { name:"Combo + Soda", price:45000, qty:0 },
     { name:"Nacho Cheese", price:20000, qty:0 }
   ];
   
-  // State global
-  let currentDiscount = { type: null, value: 0 }; // 'percent' atau 'nominal'
+  let currentDiscount = { type: null, value: 0 };
   let foodQuantities = [0,0,0];
+  let ratingsData = {};
   
-  // Data rating & ulasan (disimpan di localStorage per film)
-  let ratingsData = {};  // { "Avengers: Endgame": { ratings: [5,4], reviews:["bagus"] } }
-  
-  // Helper toast
   function showToast(msg, isError=false) {
     let toast = document.createElement('div');
     toast.className = 'toast';
@@ -409,7 +249,6 @@
     setTimeout(() => toast.remove(), 3000);
   }
   
-  // Render denah kursi
   function renderSeatMap() {
     const container = document.getElementById('seatMapContainer');
     const colHeader = document.getElementById('colHeader');
@@ -450,7 +289,6 @@
     }
   }
   
-  // Hitung subtotal tiket (termasuk tambahan jenis kursi)
   function computeTicketSubtotal() {
     let basePrice = movies[movieSelect.selectedIndex].price;
     let extra = 0;
@@ -462,18 +300,16 @@
     return (basePrice * selectedSeats.length) + extra;
   }
   
-  // Hitung subtotal makanan
   function computeFoodSubtotal() {
     let total = 0;
     foodItems.forEach((item,idx)=> total += item.price * foodQuantities[idx]);
     return total;
   }
   
-  // Diskon applied
-  function applyDiscount(amountBeforeDiscount) {
-    if(currentDiscount.type === 'percent') return Math.floor(amountBeforeDiscount * (1 - currentDiscount.value/100));
-    if(currentDiscount.type === 'nominal') return Math.max(0, amountBeforeDiscount - currentDiscount.value);
-    return amountBeforeDiscount;
+  function applyDiscount(amount) {
+    if(currentDiscount.type === 'percent') return Math.floor(amount * (1 - currentDiscount.value/100));
+    if(currentDiscount.type === 'nominal') return Math.max(0, amount - currentDiscount.value);
+    return amount;
   }
   
   function updateAllSummary() {
@@ -490,13 +326,12 @@
     document.getElementById('selectedSeatsList').innerHTML = selectedSeats.length ? selectedSeats.sort().join(', ') : '-';
     const movie = movies[movieSelect.selectedIndex].title;
     document.getElementById('movieTitle').innerText = movie;
-    const date = dateSelect.value;
+    const date = document.getElementById('dateInput').value || "2025-01-01";
     const studio = studioSelect.value;
     const time = scheduleSelect.value;
     document.getElementById('dateStudio').innerText = `${date} ${time} | ${studio}`;
   }
   
-  // Makanan UI
   function renderFoodMenu() {
     const container = document.getElementById('foodMenu');
     container.innerHTML = '';
@@ -516,7 +351,6 @@
     });
   }
   
-  // Promo
   function applyPromo(code){
     code = code.toUpperCase();
     if(code === "HEMAT20") { currentDiscount = { type:'percent', value:20 }; showToast("Promo HEMAT20: diskon 20%"); }
@@ -525,7 +359,6 @@
     updateAllSummary();
   }
   
-  // Simpan & Load Favorit (kursi) ke localStorage berdasarkan email
   function saveFavorite() {
     let email = document.getElementById('customerEmail').value.trim();
     if(!email){ showToast("Masukkan email dulu untuk menyimpan favorit", true); return; }
@@ -544,7 +377,6 @@
     } else showToast("Tidak ada favorit", true);
   }
   
-  // Riwayat pemesanan sederhana (disimpan di localStorage per email)
   function saveBookingHistory(email, bookingData) {
     let history = JSON.parse(localStorage.getItem(`history_${email}`) || '[]');
     history.unshift(bookingData);
@@ -563,7 +395,7 @@
     }
   }
   
-  // Rating & Review (per film)
+  // Rating & Review
   function loadRatingData() {
     let stored = localStorage.getItem('movieRatings');
     if(stored) ratingsData = JSON.parse(stored);
@@ -584,7 +416,6 @@
         submitRating(val, movie);
       });
     });
-    // tampilkan review
     let revDiv = document.getElementById('reviewsList');
     revDiv.innerHTML = data.reviews.slice(-3).map(r=>`📝 ${r}`).join('<br>') || "Belum ada ulasan.";
   }
@@ -607,29 +438,17 @@
     showToast("Ulasan terkirim!");
   }
   
-  // Proses pemesanan
-  function processBooking() {
-    let name = document.getElementById('customerName').value.trim();
-    let email = document.getElementById('customerEmail').value.trim();
-    if(!name) { showToast("Nama pemesan wajib diisi", true); return; }
-    if(selectedSeats.length===0) { showToast("Pilih minimal 1 kursi", true); return; }
-    let movie = movies[movieSelect.selectedIndex].title;
-    let datetime = `${dateSelect.value} ${scheduleSelect.value} | ${studioSelect.value}`;
-    let seatsStr = selectedSeats.sort().join(',');
-    let foodOrder = foodItems.map((f,i)=> `${f.name} x${foodQuantities[i]}`).filter(f=>!f.endsWith('x0')).join(', ');
-    let payment = document.querySelector('input[name="payment"]:checked').value;
-    let total = document.getElementById('totalPriceDisplay').innerText;
-    let bookingId = 'TIX'+Date.now();
-    let message = `✅ Pemesanan Sukses!\nID: ${bookingId}\nNama: ${name}\nFilm: ${movie}\nJadwal: ${datetime}\nKursi: ${seatsStr}\nMakanan: ${foodOrder || '-'}\nTotal: ${total}\nMetode: ${payment}\nEmail tiket dikirim ke ${email || 'tidak ada'}`;
-    alert(message);
-    showToast("Pesanan berhasil! Simpan ID Tiket");
-    // simpan ke riwayat
-    if(email){
-      saveBookingHistory(email, { id:bookingId, movie, seats:seatsStr, total, date:datetime, food:foodOrder });
+  // Fungsi pembayaran dengan instruksi
+  function processPaymentMethod(method, totalAmount) {
+    let instruksi = "";
+    if(method === "Transfer Bank") {
+      instruksi = "Silakan transfer ke BCA 1234567890 a.n. CineTicket+ dengan nominal Rp" + totalAmount.toLocaleString('id-ID') + ".\nUpload bukti transfer di email kami.";
+    } else if(method === "QRIS") {
+      instruksi = "Scan QRIS berikut:\n[QR Code Dummy: CINETICKET-"+Date.now()+"]\nNominal: Rp"+totalAmount.toLocaleString('id-ID');
+    } else if(method === "E-Wallet") {
+      instruksi = "Gunakan E-Wallet (OVO/DANA/GoPay) ke nomor 081234567890.\nID transaksi: "+Math.floor(Math.random()*1000000);
     }
-    // opsi export PDF
-    let exportConfirm = confirm("Ingin export tiket sebagai PDF?");
-    if(exportConfirm) exportTicketPDF(bookingId, name, movie, datetime, seatsStr, total, foodOrder);
+    return instruksi;
   }
   
   async function exportTicketPDF(id, name, movie, datetime, seats, total, food) {
@@ -650,15 +469,46 @@
     showToast("Tiket PDF terunduh");
   }
   
-  // Inisialisasi UI, dropdown, event
+  function processBooking() {
+    let name = document.getElementById('customerName').value.trim();
+    let email = document.getElementById('customerEmail').value.trim();
+    if(!name) { showToast("Nama pemesan wajib diisi", true); return; }
+    if(selectedSeats.length===0) { showToast("Pilih minimal 1 kursi", true); return; }
+    let movie = movies[movieSelect.selectedIndex].title;
+    let date = document.getElementById('dateInput').value;
+    let time = scheduleSelect.value;
+    let studio = studioSelect.value;
+    let datetime = `${date} ${time} | ${studio}`;
+    let seatsStr = selectedSeats.sort().join(',');
+    let foodOrder = foodItems.map((f,i)=> `${f.name} x${foodQuantities[i]}`).filter(f=>!f.endsWith('x0')).join(', ');
+    let paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+    let totalDisplay = document.getElementById('totalPriceDisplay').innerText;
+    let totalNum = parseInt(totalDisplay.replace(/[^0-9]/g,''));
+    let instruksiBayar = processPaymentMethod(paymentMethod, totalNum);
+    
+    let bookingId = 'TIX'+Date.now();
+    let message = `✅ Pemesanan Selesai!\nID: ${bookingId}\nNama: ${name}\nFilm: ${movie}\nJadwal: ${datetime}\nKursi: ${seatsStr}\nMakanan: ${foodOrder || '-'}\nTotal: ${totalDisplay}\nMetode: ${paymentMethod}\n\n📌 INSTRUKSI PEMBAYARAN:\n${instruksiBayar}\n\nSilakan selesaikan pembayaran untuk mengaktifkan tiket.`;
+    alert(message);
+    showToast(`Pesanan berhasil! Cek instruksi ${paymentMethod}`);
+    
+    if(email){
+      saveBookingHistory(email, { id:bookingId, movie, seats:seatsStr, total:totalDisplay, date:datetime, food:foodOrder, payment:paymentMethod });
+    }
+    let exportConfirm = confirm("Ingin export tiket sebagai PDF?");
+    if(exportConfirm) exportTicketPDF(bookingId, name, movie, datetime, seatsStr, totalDisplay, foodOrder);
+  }
+  
+  // Inisialisasi semua
   function init() {
-    const movieSelect = document.getElementById('movieSelect');
+    window.movieSelect = document.getElementById('movieSelect');
     movies.forEach((m,idx)=>{ let opt = new Option(`${m.title} - Rp${m.price.toLocaleString()}`, idx); movieSelect.appendChild(opt); });
-    const dateSelect = document.getElementById('dateSelect');
-    dates.forEach(d=>{ let opt = new Option(d,d); dateSelect.appendChild(opt); });
-    const scheduleSelect = document.getElementById('scheduleSelect');
+    window.scheduleSelect = document.getElementById('scheduleSelect');
     times.forEach(t=>{ let opt = new Option(t,t); scheduleSelect.appendChild(opt); });
-    document.getElementById('studioSelect').innerHTML = '<option>Studio 1</option><option>Studio 2</option><option>Studio 3</option>';
+    window.studioSelect = document.getElementById('studioSelect');
+    // set tanggal default hari ini
+    let today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').value = today;
+    
     renderSeatMap();
     renderFoodMenu();
     updateAllSummary();
@@ -670,9 +520,9 @@
     document.getElementById('resetSeatsBtn').onclick = () => { selectedSeats=[]; renderSeatMap(); updateAllSummary(); };
     document.getElementById('submitReviewBtn').onclick = submitReview;
     movieSelect.onchange = () => { updateAllSummary(); updateRatingDisplay(); };
-    dateSelect.onchange = () => updateAllSummary();
     scheduleSelect.onchange = () => updateAllSummary();
-    document.getElementById('studioSelect').onchange = () => updateAllSummary();
+    studioSelect.onchange = () => updateAllSummary();
+    document.getElementById('dateInput').onchange = () => updateAllSummary();
     loadRatingData();
   }
   init();
