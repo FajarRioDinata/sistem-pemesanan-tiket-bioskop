@@ -4,7 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>CineTicket - Pemesanan Tiket Bioskop</title>
+  <title>CineTicket+ | All-in-One Bioskop Pemesanan</title>
+  <!-- Library untuk PDF & Canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Font Awesome untuk ikon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -19,9 +24,8 @@
       padding: 2rem 1.5rem;
     }
 
-    /* Container utama */
     .cinema-container {
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
       background: rgba(18, 24, 34, 0.75);
       backdrop-filter: blur(2px);
@@ -31,7 +35,6 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 2rem;
@@ -44,49 +47,35 @@
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
-      letter-spacing: -0.5px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    .header p {
-      color: #9aa6b9;
-      margin-top: 0.5rem;
-      font-weight: 500;
-    }
-
-    /* layout 2 kolom */
     .booking-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 2rem;
     }
 
-    /* panel kiri: film, jadwal, denah kursi */
     .left-panel {
       flex: 2;
-      min-width: 280px;
+      min-width: 300px;
     }
 
-    /* panel kanan: ringkasan & data pemesan */
     .right-panel {
-      flex: 1.2;
-      min-width: 280px;
+      flex: 1.3;
+      min-width: 320px;
       background: rgba(10, 14, 23, 0.7);
       border-radius: 1.8rem;
       padding: 1.5rem;
       backdrop-filter: blur(4px);
       border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
 
-    /* card style */
     .card {
       background: #11161f;
       border-radius: 1.5rem;
       padding: 1.2rem 1.5rem;
       margin-bottom: 1.8rem;
       border: 1px solid #2a2f3c;
-      transition: all 0.2s;
     }
 
     .card-title {
@@ -96,27 +85,21 @@
       color: #FFDE9C;
       border-left: 4px solid #F4B836;
       padding-left: 12px;
-      letter-spacing: -0.2px;
     }
 
-    /* select & form */
-    select, input {
+    select, input, .radio-group {
       width: 100%;
       background: #1E2532;
       border: 1px solid #323a48;
       padding: 12px 16px;
       border-radius: 1rem;
       color: #f0f3fa;
-      font-size: 0.95rem;
-      font-weight: 500;
+      font-size: 0.9rem;
       outline: none;
-      transition: 0.2s;
-      cursor: pointer;
     }
 
-    select:focus, input:focus {
-      border-color: #F4B836;
-      box-shadow: 0 0 0 2px rgba(244, 184, 54, 0.2);
+    .form-group {
+      margin-bottom: 1rem;
     }
 
     label {
@@ -125,41 +108,24 @@
       font-size: 0.8rem;
       font-weight: 600;
       color: #b9c3db;
-      letter-spacing: 0.3px;
-    }
-
-    .form-group {
-      margin-bottom: 1.2rem;
     }
 
     /* Denah kursi */
     .screen {
       background: #232a36;
       text-align: center;
-      padding: 8px 0;
+      padding: 8px;
       border-radius: 30px;
-      margin: 20px 0 20px 0;
+      margin: 15px 0;
       font-weight: bold;
-      color: #ddd;
-      letter-spacing: 4px;
-      font-size: 0.85rem;
-      box-shadow: inset 0 1px 4px #00000030, 0 2px 6px rgba(0,0,0,0.3);
-      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     .seat-map-wrapper {
       overflow-x: auto;
-      padding: 5px 0 10px 0;
+      padding: 5px 0;
     }
 
-    .seat-map {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 500px;
-    }
-
-    /* header kolom (1-8) */
     .col-header {
       display: flex;
       margin-left: 38px;
@@ -173,12 +139,11 @@
       font-weight: bold;
       color: #8e9bb5;
     }
-
-    /* setiap baris kursi */
     .seat-row {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-bottom: 6px;
     }
     .row-label {
       width: 38px;
@@ -188,7 +153,6 @@
       border-radius: 12px;
       text-align: center;
       padding: 6px 0;
-      font-size: 0.9rem;
     }
     .seats {
       display: flex;
@@ -198,62 +162,36 @@
     .seat {
       width: 44px;
       height: 44px;
-      background: #2C3546;
       border-radius: 16px 16px 12px 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.7rem;
       font-weight: bold;
-      color: #cfdbf5;
       cursor: pointer;
-      transition: 0.1s linear;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      transition: 0.1s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       border-bottom: 3px solid #1f2532;
     }
-    /* status kursi */
-    .seat.available {
-      background: #2b6e4c;
-      background: linear-gradient(145deg, #2b804e, #1f6a3f);
-      color: white;
-      border-bottom-color: #0f4429;
-    }
-    .seat.selected {
-      background: linear-gradient(145deg, #F4B836, #E09D1E);
-      color: #1e1b13;
-      border-bottom-color: #b47c10;
-      box-shadow: 0 0 0 2px rgba(244,184,54,0.5);
-      font-weight: bold;
-    }
-    .seat.booked {
-      background: #4a3b2c;
-      background: linear-gradient(145deg, #4f3e2c, #3c2e1f);
-      color: #8f7a60;
-      cursor: not-allowed;
-      border-bottom-color: #2d241a;
-      text-decoration: line-through;
-      filter: grayscale(0.2);
-    }
-    .seat.available:hover {
-      transform: scale(1.03);
-      background: #3c9e62;
-      box-shadow: 0 0 6px #70e6a0;
-    }
+    .seat.available { background: #2b6e4c; color: white; }
+    .seat.selected { background: linear-gradient(145deg, #F4B836, #E09D1E); color: #1e1b13; border-bottom-color: #b47c10; }
+    .seat.booked { background: #4a3b2c; color: #8f7a60; cursor: not-allowed; text-decoration: line-through; }
+    .seat.vip { background: #9b59b6; }
+    .seat.loveseat { background: #e67e22; }
+    .seat.available:hover { transform: scale(1.03); filter: brightness(1.1);}
 
-    /* legenda */
     .legend {
       display: flex;
-      gap: 20px;
-      margin-top: 20px;
+      gap: 15px;
+      margin-top: 15px;
       flex-wrap: wrap;
       justify-content: center;
     }
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-size: 0.7rem;
-      color: #bfc9e0;
     }
     .legend-box {
       width: 24px;
@@ -261,350 +199,483 @@
       border-radius: 8px;
     }
 
-    /* ringkasan */
+    /* Makanan */
+    .food-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 6px 0;
+      border-bottom: 1px dashed #2a3140;
+    }
+    .food-item input { width: 60px; text-align: center; padding: 6px; background: #0c111a; }
+
     .summary-line {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed #2a3140;
+      margin-bottom: 10px;
       font-size: 0.9rem;
     }
     .summary-total {
       font-size: 1.4rem;
       font-weight: bold;
       color: #FFD966;
-      margin: 12px 0;
-    }
-    .selected-seats-list {
-      background: #0e121b;
-      border-radius: 12px;
-      padding: 10px;
-      font-size: 0.8rem;
-      max-height: 100px;
-      overflow-y: auto;
-      color: #cbd5f0;
-      word-break: break-all;
     }
     button {
       background: #F4B836;
       border: none;
-      padding: 12px 20px;
+      padding: 12px;
       border-radius: 2rem;
-      font-weight: 700;
-      font-size: 1rem;
-      color: #1F1A0C;
-      cursor: pointer;
-      transition: 0.2s;
+      font-weight: bold;
       width: 100%;
       margin-top: 10px;
-      box-shadow: 0 5px 0 #b47c10;
+      cursor: pointer;
+      transition: 0.2s;
     }
-    button:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #b47c10;
+    button:active { transform: translateY(2px);}
+    .btn-secondary { background: #2f3a4b; color: #f2e8cf; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e2a32;
+      color: #FFDE9C;
+      padding: 12px 20px;
+      border-radius: 40px;
+      box-shadow: 0 4px 12px black;
+      z-index: 1000;
+      animation: fadein 0.3s;
     }
-    .btn-secondary {
-      background: #2f3a4b;
-      box-shadow: 0 4px 0 #1b222e;
-      color: #f2e8cf;
-      margin-top: 8px;
-    }
-    .btn-secondary:active {
-      transform: translateY(2px);
-    }
-    hr {
-      border-color: #2a3140;
-      margin: 15px 0;
-    }
-    @media (max-width: 780px) {
-      body { padding: 1rem; }
-      .cinema-container { padding: 1rem; }
-      .seat { width: 36px; height: 36px; font-size: 0.6rem; }
-      .col-header .col-num { width: 36px; }
-    }
+    @keyframes fadein { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; } }
+    .rating-star { cursor: pointer; font-size: 1.5rem; color: gray; display: inline-block; }
+    .rating-star.active { color: #F4B836; }
+    hr { border-color: #2a3140; margin: 10px 0; }
   </style>
 </head>
 <body>
-<div class="cinema-container">
+<div class="cinema-container" id="bookingApp">
   <div class="header">
-    <h1>🎬 CineTicket</h1>
-    <p>Pesan tikus bioskop favoritmu | Pilih kursi & jadwal</p>
+    <h1><i class="fas fa-ticket-alt"></i> CineTicket+ Premium</h1>
+    <p>Pilih film, kursi (VIP/Love Seat), makanan, promo, & simpan favorit</p>
   </div>
 
   <div class="booking-grid">
-    <!-- Panel Kiri: Pilihan Film, Jadwal, dan Denah Kursi -->
+    <!-- Kiri: Film, Jadwal, Studio, Denah Kursi -->
     <div class="left-panel">
       <div class="card">
-        <div class="card-title">🎞️ Pilih Film & Jadwal</div>
+        <div class="card-title"><i class="fas fa-film"></i> Film & Jadwal</div>
         <div class="form-group">
-          <label>🎥 Film</label>
-          <select id="movieSelect">
-            <option value="50000" data-title="Avengers: Endgame">Avengers: Endgame - Rp50.000</option>
-            <option value="55000" data-title="Dune: Part Two">Dune: Part Two - Rp55.000</option>
-            <option value="45000" data-title="Spider-Man: No Way Home">Spider-Man: No Way Home - Rp45.000</option>
-            <option value="60000" data-title="Oppenheimer">Oppenheimer - Rp60.000</option>
-          </select>
+          <label>🎬 Film</label>
+          <select id="movieSelect"></select>
         </div>
         <div class="form-group">
-          <label>⏰ Jadwal Tayang</label>
-          <select id="scheduleSelect">
-            <option value="10:30">10:30 WIB</option>
-            <option value="13:45">13:45 WIB</option>
-            <option value="16:00" selected>16:00 WIB</option>
-            <option value="19:30">19:30 WIB</option>
-            <option value="22:15">22:15 WIB</option>
-          </select>
+          <label>📅 Tanggal Tayang</label>
+          <select id="dateSelect"></select>
+        </div>
+        <div class="form-group">
+          <label>⏰ Jam Tayang</label>
+          <select id="scheduleSelect"></select>
+        </div>
+        <div class="form-group">
+          <label>🏢 Studio</label>
+          <select id="studioSelect"><option>Studio 1</option><option>Studio 2</option><option>Studio 3</option></select>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">🎟️ Pilih Kursi Anda</div>
-        <div class="screen"> 📽️ L A Y A R   B I O S K O P 🎞️</div>
+        <div class="card-title"><i class="fas fa-couch"></i> Pilih Kursi (max 10 tiket)</div>
+        <div class="screen">LAYAR BIOSKOP</div>
         <div class="seat-map-wrapper">
           <div class="col-header" id="colHeader"></div>
           <div id="seatMapContainer" class="seat-map"></div>
         </div>
         <div class="legend">
           <div class="legend-item"><div class="legend-box" style="background:#2b6e4c;"></div> Tersedia</div>
+          <div class="legend-item"><div class="legend-box" style="background:#9b59b6;"></div> VIP (+20k)</div>
+          <div class="legend-item"><div class="legend-box" style="background:#e67e22;"></div> Love Seat (+30k)</div>
           <div class="legend-item"><div class="legend-box" style="background:#F4B836;"></div> Dipilih</div>
           <div class="legend-item"><div class="legend-box" style="background:#4a3b2c;"></div> Terisi</div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+          <button id="saveFavoriteBtn" class="btn-secondary" style="width:50%"><i class="fas fa-heart"></i> Simpan Favorit</button>
+          <button id="loadFavoriteBtn" class="btn-secondary" style="width:50%"><i class="fas fa-download"></i> Ambil Favorit</button>
         </div>
       </div>
     </div>
 
-    <!-- Panel Kanan: Ringkasan & Data Pemesan -->
+    <!-- Kanan: Ringkasan, Makanan, Promo, Pembayaran, Login -->
     <div class="right-panel">
-      <div class="card-title">📋 Ringkasan Pesanan</div>
+      <div class="card-title"><i class="fas fa-receipt"></i> Ringkasan Pesanan</div>
       <div id="summaryArea">
-        <div class="summary-line"><span>🎬 Film:</span><span id="movieTitle">Avengers: Endgame</span></div>
-        <div class="summary-line"><span>⏱️ Jadwal:</span><span id="showTime">16:00 WIB</span></div>
-        <div class="summary-line"><span>💺 Kursi dipilih:</span><span id="selectedCount">0</span></div>
-        <div class="selected-seats-list" id="selectedSeatsList">-</div>
+        <div class="summary-line"><span>🎬 Film:</span><span id="movieTitle">-</span></div>
+        <div class="summary-line"><span>📅 Tanggal/Studio:</span><span id="dateStudio">-</span></div>
+        <div class="summary-line"><span>💺 Kursi (harga include tambahan):</span><span id="selectedCount">0</span></div>
+        <div class="selected-seats-list" id="selectedSeatsList" style="background:#0e121b; border-radius:12px; padding:8px; font-size:0.75rem; margin-bottom:8px;">-</div>
+        <div class="summary-line"><span>🍿 Makanan:</span><span id="foodSubtotal">Rp0</span></div>
+        <div class="summary-line"><span>🎟️ Subtotal Tiket:</span><span id="ticketSubtotal">Rp0</span></div>
+        <div class="summary-line"><span>🏷️ Diskon (Promo):</span><span id="discountText">Rp0</span></div>
         <div class="summary-total" id="totalPriceDisplay">Rp0</div>
       </div>
-      
+
+      <div class="form-group">
+        <label>🍔 Pesan Makanan</label>
+        <div id="foodMenu"></div>
+      </div>
+
+      <div class="form-group">
+        <label>🎟️ Kode Promo</label>
+        <div style="display:flex; gap:6px;"><input type="text" id="promoCode" placeholder="HEMAT20 / CINEMA10" style="flex:2"><button id="applyPromoBtn" style="width:auto; margin:0; padding:0 12px;">Apply</button></div>
+        <small style="color:#aaa">HEMAT20 (20% off), CINEMA10 (10k off)</small>
+      </div>
+
+      <div class="form-group">
+        <label>💳 Metode Pembayaran</label>
+        <div id="paymentMethods" class="radio-group" style="display:flex; gap:12px; background:transparent; padding:0;">
+          <label><input type="radio" name="payment" value="Transfer Bank" checked> Transfer Bank</label>
+          <label><input type="radio" name="payment" value="QRIS"> QRIS</label>
+          <label><input type="radio" name="payment" value="E-Wallet"> E-Wallet</label>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>👤 Nama Pemesan</label>
-        <input type="text" id="customerName" placeholder="Nama lengkap" value="Bagus Santoso">
+        <input type="text" id="customerName" placeholder="Nama lengkap">
       </div>
       <div class="form-group">
-        <label>📧 Email (opsional)</label>
+        <label>📧 Email (Login via email & riwayat)</label>
         <input type="email" id="customerEmail" placeholder="email@contoh.com">
+        <button id="viewHistoryBtn" class="btn-secondary" style="margin-top:5px;"><i class="fas fa-history"></i> Lihat Riwayat Saya</button>
       </div>
-      
-      <button id="confirmBookingBtn">✨ Pesan Tiket Sekarang ✨</button>
+
+      <button id="confirmBookingBtn"><i class="fas fa-check-circle"></i> Pesan Sekarang</button>
       <button id="resetSeatsBtn" class="btn-secondary">↺ Reset Pilihan Kursi</button>
     </div>
+  </div>
+
+  <!-- Bagian Rating Film -->
+  <div class="card" style="margin-top: 1.5rem;">
+    <div class="card-title"><i class="fas fa-star"></i> Rating & Ulasan Film Ini</div>
+    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+      <div id="ratingStars"></div>
+      <span id="avgRatingDisplay">⭐ Belum ada rating</span>
+      <input type="text" id="reviewText" placeholder="Tulis ulasan singkat..." style="flex:1">
+      <button id="submitReviewBtn" class="btn-secondary" style="width:auto;">Kirim Ulasan</button>
+    </div>
+    <div id="reviewsList" style="margin-top: 12px; max-height: 100px; overflow-y: auto; font-size: 0.8rem;"></div>
   </div>
 </div>
 
 <script>
-  // ---------- DATA KONFIGURASI KURSI ----------
+  // ======================= KONFIGURASI DATA =======================
   const ROWS = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const COLUMNS = 8;  // 1-8
-  // Kursi yang sudah dipesan (booked) - contoh beberapa kursi tidak tersedia
-  const INIT_BOOKED = ['A3', 'B5', 'C2', 'D7', 'E4', 'F6', 'B8', 'C6', 'E1', 'F3'];
+  const COLS = 8;
+  // Tipe kursi berdasarkan baris: A,B = VIP (+20000), C,D = Standard (+0), E,F = Love Seat (+30000)
+  const seatTypeMap = { 'A':'vip', 'B':'vip', 'C':'standard', 'D':'standard', 'E':'loveseat', 'F':'loveseat' };
+  const seatExtra = { 'vip':20000, 'standard':0, 'loveseat':30000 };
+  let bookedSeats = ['A3','B5','C2','D7','E4','F6','B8','C6','E1','F3']; // contoh terisi
+  let selectedSeats = [];
+  
+  // Film data (harga base)
+  const movies = [
+    { title:"Avengers: Endgame", price:50000 },
+    { title:"Dune: Part Two", price:55000 },
+    { title:"Spider-Man: No Way Home", price:45000 },
+    { title:"Oppenheimer", price:60000 }
+  ];
+  // Jadwal & Tanggal
+  const dates = ["Hari Ini", "Besok", "Lusa"];
+  const times = ["10:30", "13:45", "16:00", "19:30", "22:15"];
+  
+  // Makanan
+  const foodItems = [
+    { name:"Popcorn Regular", price:25000, qty:0 },
+    { name:"Combo + Soda", price:45000, qty:0 },
+    { name:"Nacho Cheese", price:20000, qty:0 }
+  ];
   
   // State global
-  let bookedSeats = [...INIT_BOOKED];       // array string ID kursi (ex: "A3")
-  let selectedSeats = [];                   // kursi yang dipilih user
+  let currentDiscount = { type: null, value: 0 }; // 'percent' atau 'nominal'
+  let foodQuantities = [0,0,0];
   
-  // DOM elements
-  const movieSelect = document.getElementById('movieSelect');
-  const scheduleSelect = document.getElementById('scheduleSelect');
-  const seatMapContainer = document.getElementById('seatMapContainer');
-  const colHeader = document.getElementById('colHeader');
-  const movieTitleSpan = document.getElementById('movieTitle');
-  const showTimeSpan = document.getElementById('showTime');
-  const selectedCountSpan = document.getElementById('selectedCount');
-  const selectedSeatsListDiv = document.getElementById('selectedSeatsList');
-  const totalPriceDisplay = document.getElementById('totalPriceDisplay');
-  const confirmBtn = document.getElementById('confirmBookingBtn');
-  const resetSeatsBtn = document.getElementById('resetSeatsBtn');
-  const customerNameInput = document.getElementById('customerName');
-  const customerEmailInput = document.getElementById('customerEmail');
+  // Data rating & ulasan (disimpan di localStorage per film)
+  let ratingsData = {};  // { "Avengers: Endgame": { ratings: [5,4], reviews:["bagus"] } }
   
-  // Helper: Mendapatkan harga film saat ini
-  function getCurrentMoviePrice() {
-    return parseInt(movieSelect.value, 10);
+  // Helper toast
+  function showToast(msg, isError=false) {
+    let toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
   }
   
-  // Helper: Judul film (berdasarkan option yang dipilih)
-  function getCurrentMovieTitle() {
-    return movieSelect.options[movieSelect.selectedIndex].getAttribute('data-title') || movieSelect.options[movieSelect.selectedIndex].text.split('-')[0].trim();
-  }
-  
-  // Helper: Jadwal yang dipilih
-  function getCurrentSchedule() {
-    return scheduleSelect.value + ' WIB';
-  }
-  
-  // Update ringkasan: jumlah kursi, total harga, daftar kursi, film, jadwal
-  function updateSummary() {
-    const movie = getCurrentMovieTitle();
-    const schedule = getCurrentSchedule();
-    const price = getCurrentMoviePrice();
-    const count = selectedSeats.length;
-    const total = price * count;
-    
-    movieTitleSpan.innerText = movie;
-    showTimeSpan.innerText = schedule;
-    selectedCountSpan.innerText = count;
-    
-    if (count === 0) {
-      selectedSeatsListDiv.innerHTML = '-';
-    } else {
-      // urutkan kursi secara alami (A1, A2, ...)
-      const sorted = [...selectedSeats].sort((a,b) => {
-        const rowA = a.charCodeAt(0);
-        const rowB = b.charCodeAt(0);
-        if (rowA !== rowB) return rowA - rowB;
-        const numA = parseInt(a.slice(1), 10);
-        const numB = parseInt(b.slice(1), 10);
-        return numA - numB;
-      });
-      selectedSeatsListDiv.innerHTML = sorted.join(', ');
-    }
-    totalPriceDisplay.innerText = `Rp${total.toLocaleString('id-ID')}`;
-  }
-  
-  // Render denah kursi berdasarkan state (bookedSeats & selectedSeats)
+  // Render denah kursi
   function renderSeatMap() {
-    // Generate header kolom (1 sampai 8)
-    colHeader.innerHTML = '';
-    const dummyDiv = document.createElement('div');
-    dummyDiv.style.width = '38px'; // placeholder untuk label baris
-    colHeader.appendChild(dummyDiv);
-    for (let i = 1; i <= COLUMNS; i++) {
-      const colNum = document.createElement('div');
-      colNum.className = 'col-num';
-      colNum.innerText = i;
-      colHeader.appendChild(colNum);
-    }
-    
-    seatMapContainer.innerHTML = ''; // bersihkan peta
-    // Loop setiap baris
-    for (let r of ROWS) {
-      const rowDiv = document.createElement('div');
-      rowDiv.className = 'seat-row';
-      
-      // Label baris (A, B, C...)
-      const rowLabel = document.createElement('div');
-      rowLabel.className = 'row-label';
-      rowLabel.innerText = r;
+    const container = document.getElementById('seatMapContainer');
+    const colHeader = document.getElementById('colHeader');
+    colHeader.innerHTML = '<div style="width:38px"></div>';
+    for(let i=1;i<=COLS;i++){ let d=document.createElement('div'); d.className='col-num'; d.innerText=i; colHeader.appendChild(d); }
+    container.innerHTML = '';
+    for(let r of ROWS){
+      const rowDiv = document.createElement('div'); rowDiv.className='seat-row';
+      const rowLabel = document.createElement('div'); rowLabel.className='row-label'; rowLabel.innerText=r;
       rowDiv.appendChild(rowLabel);
-      
-      const seatsDiv = document.createElement('div');
-      seatsDiv.className = 'seats';
-      
-      for (let col = 1; col <= COLUMNS; col++) {
-        const seatId = `${r}${col}`;
-        const seatDiv = document.createElement('div');
-        seatDiv.className = 'seat';
-        
-        // Tentukan status kursi
-        if (bookedSeats.includes(seatId)) {
-          seatDiv.classList.add('booked');
-          seatDiv.innerText = '✕';
-        } else if (selectedSeats.includes(seatId)) {
-          seatDiv.classList.add('selected');
-          seatDiv.innerText = '✓';
-        } else {
-          seatDiv.classList.add('available');
-          seatDiv.innerText = `${col}`;
-        }
-        
-        // Event listener klik
-        seatDiv.addEventListener('click', (function(id, isBooked) {
-          return function() {
-            if (isBooked) {
-              // kursi tidak bisa dipilih
-              return;
-            }
-            // Toggle selected
-            const index = selectedSeats.indexOf(id);
-            if (index === -1) {
-              selectedSeats.push(id);
-            } else {
-              selectedSeats.splice(index, 1);
-            }
-            // Re-render peta kursi & update ringkasan
-            renderSeatMap();
-            updateSummary();
-          };
-        })(seatId, bookedSeats.includes(seatId)));
-        
-        seatsDiv.appendChild(seatDiv);
+      const seatsDiv = document.createElement('div'); seatsDiv.className='seats';
+      for(let c=1;c<=COLS;c++){
+        const seatId = `${r}${c}`;
+        const seat = document.createElement('div'); seat.className='seat';
+        const type = seatTypeMap[r];
+        if(bookedSeats.includes(seatId)) seat.classList.add('booked');
+        else if(selectedSeats.includes(seatId)) seat.classList.add('selected');
+        else seat.classList.add('available');
+        if(type==='vip' && !bookedSeats.includes(seatId) && !selectedSeats.includes(seatId)) seat.classList.add('vip');
+        if(type==='loveseat' && !bookedSeats.includes(seatId) && !selectedSeats.includes(seatId)) seat.classList.add('loveseat');
+        seat.innerText = c;
+        seat.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if(bookedSeats.includes(seatId)) { showToast("Kursi sudah dipesan!", true); return; }
+          if(selectedSeats.includes(seatId)){
+            selectedSeats = selectedSeats.filter(s=>s!==seatId);
+          } else {
+            if(selectedSeats.length >= 10) { showToast("Maksimal 10 tiket per pemesanan!", true); return; }
+            selectedSeats.push(seatId);
+          }
+          renderSeatMap();
+          updateAllSummary();
+        });
+        seatsDiv.appendChild(seat);
       }
       rowDiv.appendChild(seatsDiv);
-      seatMapContainer.appendChild(rowDiv);
+      container.appendChild(rowDiv);
     }
   }
   
-  // Reset semua pilihan kursi
-  function resetSelectedSeats() {
-    selectedSeats = [];
-    renderSeatMap();
-    updateSummary();
+  // Hitung subtotal tiket (termasuk tambahan jenis kursi)
+  function computeTicketSubtotal() {
+    let basePrice = movies[movieSelect.selectedIndex].price;
+    let extra = 0;
+    for(let s of selectedSeats){
+      let row = s[0];
+      let type = seatTypeMap[row];
+      extra += seatExtra[type];
+    }
+    return (basePrice * selectedSeats.length) + extra;
   }
   
-  // Event ketika film atau jadwal berubah -> update ringkasan (tidak reset kursi)
-  function handleMovieOrScheduleChange() {
-    updateSummary();
-    // tidak mereset kursi agar pengguna bisa tetap mempertahankan pilihan meskipun ganti film (lebih fleksibel)
-    // Tetapi memudahkan jika user ingin ganti film tanpa kehilangan kursi pilihannya.
-    // Tersedia tombol reset manual.
+  // Hitung subtotal makanan
+  function computeFoodSubtotal() {
+    let total = 0;
+    foodItems.forEach((item,idx)=> total += item.price * foodQuantities[idx]);
+    return total;
   }
   
-  // Validasi dan proses pemesanan
+  // Diskon applied
+  function applyDiscount(amountBeforeDiscount) {
+    if(currentDiscount.type === 'percent') return Math.floor(amountBeforeDiscount * (1 - currentDiscount.value/100));
+    if(currentDiscount.type === 'nominal') return Math.max(0, amountBeforeDiscount - currentDiscount.value);
+    return amountBeforeDiscount;
+  }
+  
+  function updateAllSummary() {
+    const ticketSub = computeTicketSubtotal();
+    const foodSub = computeFoodSubtotal();
+    let totalBeforeDisc = ticketSub + foodSub;
+    let totalAfterDisc = applyDiscount(totalBeforeDisc);
+    let discAmount = totalBeforeDisc - totalAfterDisc;
+    document.getElementById('ticketSubtotal').innerText = `Rp${ticketSub.toLocaleString('id-ID')}`;
+    document.getElementById('foodSubtotal').innerText = `Rp${foodSub.toLocaleString('id-ID')}`;
+    document.getElementById('discountText').innerHTML = discAmount>0 ? `-Rp${discAmount.toLocaleString('id-ID')}` : "Rp0";
+    document.getElementById('totalPriceDisplay').innerHTML = `Rp${totalAfterDisc.toLocaleString('id-ID')}`;
+    document.getElementById('selectedCount').innerText = selectedSeats.length;
+    document.getElementById('selectedSeatsList').innerHTML = selectedSeats.length ? selectedSeats.sort().join(', ') : '-';
+    const movie = movies[movieSelect.selectedIndex].title;
+    document.getElementById('movieTitle').innerText = movie;
+    const date = dateSelect.value;
+    const studio = studioSelect.value;
+    const time = scheduleSelect.value;
+    document.getElementById('dateStudio').innerText = `${date} ${time} | ${studio}`;
+  }
+  
+  // Makanan UI
+  function renderFoodMenu() {
+    const container = document.getElementById('foodMenu');
+    container.innerHTML = '';
+    foodItems.forEach((item, idx) => {
+      const div = document.createElement('div'); div.className='food-item';
+      div.innerHTML = `<span>${item.name} (Rp${item.price.toLocaleString()})</span>
+                       <input type="number" min="0" max="10" value="${foodQuantities[idx]}" data-idx="${idx}" style="width:70px">`;
+      const input = div.querySelector('input');
+      input.addEventListener('change', (e) => {
+        let val = parseInt(e.target.value) || 0;
+        if(val>10) val=10;
+        foodQuantities[idx] = val;
+        renderFoodMenu();
+        updateAllSummary();
+      });
+      container.appendChild(div);
+    });
+  }
+  
+  // Promo
+  function applyPromo(code){
+    code = code.toUpperCase();
+    if(code === "HEMAT20") { currentDiscount = { type:'percent', value:20 }; showToast("Promo HEMAT20: diskon 20%"); }
+    else if(code === "CINEMA10") { currentDiscount = { type:'nominal', value:10000 }; showToast("Promo CINEMA10: potong 10rb"); }
+    else { currentDiscount = { type:null, value:0 }; showToast("Kode promo tidak valid", true); }
+    updateAllSummary();
+  }
+  
+  // Simpan & Load Favorit (kursi) ke localStorage berdasarkan email
+  function saveFavorite() {
+    let email = document.getElementById('customerEmail').value.trim();
+    if(!email){ showToast("Masukkan email dulu untuk menyimpan favorit", true); return; }
+    localStorage.setItem(`fav_${email}`, JSON.stringify(selectedSeats));
+    showToast(`💾 Kursi favorit tersimpan untuk ${email}`);
+  }
+  function loadFavorite() {
+    let email = document.getElementById('customerEmail').value.trim();
+    if(!email){ showToast("Masukkan email dulu", true); return; }
+    let saved = localStorage.getItem(`fav_${email}`);
+    if(saved){
+      selectedSeats = JSON.parse(saved);
+      renderSeatMap();
+      updateAllSummary();
+      showToast("Favorit dimuat!");
+    } else showToast("Tidak ada favorit", true);
+  }
+  
+  // Riwayat pemesanan sederhana (disimpan di localStorage per email)
+  function saveBookingHistory(email, bookingData) {
+    let history = JSON.parse(localStorage.getItem(`history_${email}`) || '[]');
+    history.unshift(bookingData);
+    if(history.length > 10) history.pop();
+    localStorage.setItem(`history_${email}`, JSON.stringify(history));
+  }
+  function showHistory() {
+    let email = document.getElementById('customerEmail').value.trim();
+    if(!email) { showToast("Masukkan email untuk lihat riwayat", true); return; }
+    let history = JSON.parse(localStorage.getItem(`history_${email}`) || '[]');
+    if(history.length===0) alert(`Tidak ada riwayat untuk ${email}`);
+    else {
+      let txt = "📜 Riwayat Pemesanan:\n";
+      history.forEach((h,i)=> txt += `${i+1}. ${h.movie} | ${h.seats} | ${h.total}\n`);
+      alert(txt);
+    }
+  }
+  
+  // Rating & Review (per film)
+  function loadRatingData() {
+    let stored = localStorage.getItem('movieRatings');
+    if(stored) ratingsData = JSON.parse(stored);
+    else ratingsData = {};
+    updateRatingDisplay();
+  }
+  function updateRatingDisplay() {
+    const movie = movies[movieSelect.selectedIndex].title;
+    const data = ratingsData[movie] || { ratings: [], reviews: [] };
+    let avg = data.ratings.length ? (data.ratings.reduce((a,b)=>a+b,0)/data.ratings.length).toFixed(1) : 0;
+    document.getElementById('avgRatingDisplay').innerHTML = `⭐ ${avg} (${data.ratings.length} ulasan)`;
+    let starsHtml = '';
+    for(let i=1;i<=5;i++) starsHtml += `<span class="rating-star" data-val="${i}">★</span>`;
+    document.getElementById('ratingStars').innerHTML = starsHtml;
+    document.querySelectorAll('.rating-star').forEach(star => {
+      star.addEventListener('click', (e) => {
+        let val = parseInt(star.dataset.val);
+        submitRating(val, movie);
+      });
+    });
+    // tampilkan review
+    let revDiv = document.getElementById('reviewsList');
+    revDiv.innerHTML = data.reviews.slice(-3).map(r=>`📝 ${r}`).join('<br>') || "Belum ada ulasan.";
+  }
+  function submitRating(score, movieTitle) {
+    if(!ratingsData[movieTitle]) ratingsData[movieTitle] = { ratings:[], reviews:[] };
+    ratingsData[movieTitle].ratings.push(score);
+    localStorage.setItem('movieRatings', JSON.stringify(ratingsData));
+    updateRatingDisplay();
+    showToast(`Terima kasih rating ${score}⭐`);
+  }
+  function submitReview() {
+    let review = document.getElementById('reviewText').value.trim();
+    if(!review) return;
+    let movie = movies[movieSelect.selectedIndex].title;
+    if(!ratingsData[movie]) ratingsData[movie] = { ratings:[], reviews:[] };
+    ratingsData[movie].reviews.push(review);
+    localStorage.setItem('movieRatings', JSON.stringify(ratingsData));
+    document.getElementById('reviewText').value = '';
+    updateRatingDisplay();
+    showToast("Ulasan terkirim!");
+  }
+  
+  // Proses pemesanan
   function processBooking() {
-    const name = customerNameInput.value.trim();
-    if (name === "") {
-      alert("❌ Mohon masukkan nama pemesan terlebih dahulu.");
-      return;
-    }
-    if (selectedSeats.length === 0) {
-      alert("🎫 Silakan pilih minimal satu kursi untuk melanjutkan pemesanan.");
-      return;
-    }
-    
-    const movie = getCurrentMovieTitle();
-    const schedule = getCurrentSchedule();
-    const price = getCurrentMoviePrice();
-    const total = price * selectedSeats.length;
-    const seatsStr = selectedSeats.sort().join(', ');
-    const email = customerEmailInput.value.trim() || "(tidak diisi)";
-    
-    // Konfirmasi pesan via alert (simulasi sukses)
-    const message = `🎉 PEMESANAN BERHASIL 🎉\n\n` +
-      `Nama: ${name}\nEmail: ${email}\nFilm: ${movie}\nJadwal: ${schedule}\nKursi: ${seatsStr}\n` +
-      `Jumlah tiket: ${selectedSeats.length}\nTotal harga: Rp${total.toLocaleString('id-ID')}\n\n` +
-      `Terima kasih! Selamat menonton di CineTicket.`;
+    let name = document.getElementById('customerName').value.trim();
+    let email = document.getElementById('customerEmail').value.trim();
+    if(!name) { showToast("Nama pemesan wajib diisi", true); return; }
+    if(selectedSeats.length===0) { showToast("Pilih minimal 1 kursi", true); return; }
+    let movie = movies[movieSelect.selectedIndex].title;
+    let datetime = `${dateSelect.value} ${scheduleSelect.value} | ${studioSelect.value}`;
+    let seatsStr = selectedSeats.sort().join(',');
+    let foodOrder = foodItems.map((f,i)=> `${f.name} x${foodQuantities[i]}`).filter(f=>!f.endsWith('x0')).join(', ');
+    let payment = document.querySelector('input[name="payment"]:checked').value;
+    let total = document.getElementById('totalPriceDisplay').innerText;
+    let bookingId = 'TIX'+Date.now();
+    let message = `✅ Pemesanan Sukses!\nID: ${bookingId}\nNama: ${name}\nFilm: ${movie}\nJadwal: ${datetime}\nKursi: ${seatsStr}\nMakanan: ${foodOrder || '-'}\nTotal: ${total}\nMetode: ${payment}\nEmail tiket dikirim ke ${email || 'tidak ada'}`;
     alert(message);
-    
-    // optional: setelah pemesanan sukses, bisa reset kursi? biarkan user memutuskan dengan reset manual
-    // agar tidak membingungkan, kami hanya menampilkan alert, tidak mereset otomatis.
+    showToast("Pesanan berhasil! Simpan ID Tiket");
+    // simpan ke riwayat
+    if(email){
+      saveBookingHistory(email, { id:bookingId, movie, seats:seatsStr, total, date:datetime, food:foodOrder });
+    }
+    // opsi export PDF
+    let exportConfirm = confirm("Ingin export tiket sebagai PDF?");
+    if(exportConfirm) exportTicketPDF(bookingId, name, movie, datetime, seatsStr, total, foodOrder);
   }
   
-  // Inisialisasi: generate grid, event listener
+  async function exportTicketPDF(id, name, movie, datetime, seats, total, food) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text("🎬 CINETICKET+", 20, 20);
+    doc.setFontSize(12);
+    doc.text(`ID Tiket: ${id}`, 20, 40);
+    doc.text(`Nama: ${name}`, 20, 50);
+    doc.text(`Film: ${movie}`, 20, 60);
+    doc.text(`Jadwal: ${datetime}`, 20, 70);
+    doc.text(`Kursi: ${seats}`, 20, 80);
+    doc.text(`Makanan: ${food || '-'}`, 20, 90);
+    doc.text(`Total: ${total}`, 20, 100);
+    doc.text("Terima kasih, selamat menonton!", 20, 120);
+    doc.save(`tiket_${id}.pdf`);
+    showToast("Tiket PDF terunduh");
+  }
+  
+  // Inisialisasi UI, dropdown, event
   function init() {
+    const movieSelect = document.getElementById('movieSelect');
+    movies.forEach((m,idx)=>{ let opt = new Option(`${m.title} - Rp${m.price.toLocaleString()}`, idx); movieSelect.appendChild(opt); });
+    const dateSelect = document.getElementById('dateSelect');
+    dates.forEach(d=>{ let opt = new Option(d,d); dateSelect.appendChild(opt); });
+    const scheduleSelect = document.getElementById('scheduleSelect');
+    times.forEach(t=>{ let opt = new Option(t,t); scheduleSelect.appendChild(opt); });
+    document.getElementById('studioSelect').innerHTML = '<option>Studio 1</option><option>Studio 2</option><option>Studio 3</option>';
     renderSeatMap();
-    updateSummary();
-    
-    // event change untuk movie dan jadwal
-    movieSelect.addEventListener('change', () => {
-      handleMovieOrScheduleChange();
-    });
-    scheduleSelect.addEventListener('change', () => {
-      handleMovieOrScheduleChange();
-    });
-    resetSeatsBtn.addEventListener('click', resetSelectedSeats);
-    confirmBtn.addEventListener('click', processBooking);
+    renderFoodMenu();
+    updateAllSummary();
+    document.getElementById('applyPromoBtn').onclick = () => applyPromo(document.getElementById('promoCode').value);
+    document.getElementById('saveFavoriteBtn').onclick = saveFavorite;
+    document.getElementById('loadFavoriteBtn').onclick = loadFavorite;
+    document.getElementById('viewHistoryBtn').onclick = showHistory;
+    document.getElementById('confirmBookingBtn').onclick = processBooking;
+    document.getElementById('resetSeatsBtn').onclick = () => { selectedSeats=[]; renderSeatMap(); updateAllSummary(); };
+    document.getElementById('submitReviewBtn').onclick = submitReview;
+    movieSelect.onchange = () => { updateAllSummary(); updateRatingDisplay(); };
+    dateSelect.onchange = () => updateAllSummary();
+    scheduleSelect.onchange = () => updateAllSummary();
+    document.getElementById('studioSelect').onchange = () => updateAllSummary();
+    loadRatingData();
   }
-  
-  // jalankan init setelah DOM siap
-  document.addEventListener('DOMContentLoaded', init);
+  init();
 </script>
 </body>
 </html>
