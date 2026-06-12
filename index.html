@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Cinemax - Pesan Tiket Bioskop | QRIS Payment</title>
-    <!-- Font Awesome 6 (free icons) -->
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts: Poppins modern -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- QRCode.js library untuk generate QRIS dinamis -->
+    <!-- QRCode.js -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
@@ -25,7 +25,6 @@
             padding: 30px 24px 50px;
         }
 
-        /* container utama */
         .cinemax-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -35,7 +34,6 @@
             box-shadow: 0 25px 45px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
         }
 
-        /* header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -71,7 +69,6 @@
             font-weight: 500;
         }
 
-        /* layout 2 kolom: kiri (film/jadwal/kursi) & kanan (ringkasan+QRIS) */
         .booking-layout {
             display: flex;
             flex-wrap: wrap;
@@ -93,7 +90,6 @@
             top: 20px;
         }
 
-        /* section cards */
         .section-card {
             background: #0c0c0c;
             border-radius: 24px;
@@ -117,11 +113,11 @@
             font-size: 22px;
         }
 
-        /* daftar film (grid cards) */
+        /* Movies grid with real images */
         .movies-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 20px;
         }
         .movie-card {
             background: #141414;
@@ -137,26 +133,34 @@
             box-shadow: 0 0 12px rgba(245,197,66,0.3);
         }
         .movie-poster {
-            background: #2c2c2c;
-            height: 160px;
+            width: 100%;
+            height: 220px;
             border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 42px;
+            overflow: hidden;
             margin-bottom: 12px;
-            background: linear-gradient(145deg, #1f1f1f, #131313);
+            background: #1c1c1c;
+        }
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.2s;
+        }
+        .movie-card:hover .movie-poster img {
+            transform: scale(1.02);
         }
         .movie-title {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
+            text-align: center;
         }
         .movie-meta {
-            font-size: 12px;
+            font-size: 11px;
             color: #aaa;
+            text-align: center;
             margin-top: 6px;
         }
-        /* tanggal & jam */
         .date-selector {
             display: flex;
             gap: 12px;
@@ -192,7 +196,6 @@
             font-weight: 500;
         }
 
-        /* denah kursi */
         .screen-info {
             text-align: center;
             background: #000;
@@ -247,7 +250,6 @@
             font-size: 12px;
         }
 
-        /* form data diri */
         .input-group {
             margin-bottom: 16px;
         }
@@ -266,7 +268,6 @@
             border-color: #f5c542;
         }
 
-        /* ringkasan pesanan */
         .order-summary {
             background: #0a0a0a;
             border-radius: 20px;
@@ -358,13 +359,9 @@
                 padding: 6px 2px;
                 font-size: 10px;
             }
-        }
-        .badge {
-            background: #f5c54220;
-            color: #f5c542;
-            border-radius: 30px;
-            padding: 4px 10px;
-            font-size: 12px;
+            .movie-poster {
+                height: 180px;
+            }
         }
     </style>
 </head>
@@ -380,15 +377,15 @@
     </div>
 
     <div class="booking-layout">
-        <!-- PANEL KIRI: pilih film, jadwal, kursi -->
+        <!-- LEFT PANEL: pilih film (dengan gambar), jadwal, kursi -->
         <div class="left-panel">
-            <!-- Pilih Film -->
+            <!-- Pilih Film dengan Poster Gambar -->
             <div class="section-card">
                 <div class="section-title"><i class="fas fa-clapperboard"></i> Pilih Film</div>
                 <div class="movies-grid" id="moviesGrid"></div>
             </div>
 
-            <!-- Pilih Jadwal (Tanggal & Jam) -->
+            <!-- Pilih Jadwal -->
             <div class="section-card">
                 <div class="section-title"><i class="fas fa-calendar-alt"></i> Jadwal Tayang</div>
                 <div id="dateContainer" class="date-selector"></div>
@@ -417,7 +414,7 @@
             </div>
         </div>
 
-        <!-- PANEL KANAN: Ringkasan + QRIS pembayaran -->
+        <!-- RIGHT PANEL: Ringkasan + QRIS -->
         <div class="right-panel">
             <div class="section-title" style="margin-top:0;"><i class="fas fa-receipt"></i> Ringkasan Pesanan</div>
             <div id="dynamicSummary">
@@ -444,11 +441,32 @@
 </div>
 
 <script>
-    // ---------- DATA FILM ----------
+    // DATA FILM DENGAN GAMBAR POSTER (Real images from TMDB)
     const movies = [
-        { id: 1, title: "AVENGERS: ENDGAME", genre: "Action/Sci-Fi", duration: "181 min", icon: "🦸‍♂️" },
-        { id: 2, title: "DUNE: PART TWO", genre: "Epic/Sci-Fi", duration: "166 min", icon: "🏜️" },
-        { id: 3, title: "OPPENHEIMER", genre: "Biography/Drama", duration: "180 min", icon: "💥" }
+        { 
+            id: 1, 
+            title: "AVENGERS: ENDGAME", 
+            genre: "Action/Sci-Fi", 
+            duration: "181 min", 
+            posterUrl: "https://image.tmdb.org/t/p/w342/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+            fallback: "https://via.placeholder.com/342x514?text=Avengers"
+        },
+        { 
+            id: 2, 
+            title: "DUNE: PART TWO", 
+            genre: "Epic/Sci-Fi", 
+            duration: "166 min", 
+            posterUrl: "https://image.tmdb.org/t/p/w342/8b8t8uTwNUCz1b6WrA5Uq7e7zWp.jpg",
+            fallback: "https://via.placeholder.com/342x514?text=Dune+2"
+        },
+        { 
+            id: 3, 
+            title: "OPPENHEIMER", 
+            genre: "Biography/Drama", 
+            duration: "180 min", 
+            posterUrl: "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+            fallback: "https://via.placeholder.com/342x514?text=Oppenheimer"
+        }
     ];
 
     // Jadwal tanggal (3 hari)
@@ -463,17 +481,16 @@
     const timeSlots = ["12:00", "15:00", "18:00", "21:00"];
 
     // STATE GLOBAL
-    let selectedMovieId = 1;                // default Avengers
+    let selectedMovieId = 1;
     let selectedDate = dates[0].fullDate;
     let selectedTime = "15:00";
-    let selectedSeats = [];                 // array kode kursi ex: "A1"
-    let seatMatrix = [];                    // 2D array status 'available', 'unavailable', 'selected'
+    let selectedSeats = [];
+    let seatMatrix = [];
     let rows = ['A','B','C','D','E','F'];
-    let cols = 8; // 1-8
+    let cols = 8;
 
-    // Generate kursi awal (beberapa unavailable untuk simulasi)
+    // Inisialisasi kursi dengan beberapa unavailable
     function initSeatMatrix() {
-        // buat matriks 6 baris x 8 kolom, semua available
         let matrix = [];
         for (let r = 0; r < rows.length; r++) {
             matrix[r] = [];
@@ -481,7 +498,6 @@
                 matrix[r][c] = 'available';
             }
         }
-        // beberapa seat tidak tersedia (simulasi)
         const unavailableExamples = ["A3", "B5", "C2", "D7", "E4", "F1", "B2", "D3"];
         unavailableExamples.forEach(seatCode => {
             let {rowIdx, colIdx} = seatToIndex(seatCode);
@@ -503,7 +519,6 @@
         return rows[rowIdx] + (colIdx+1);
     }
 
-    // render ulang denah kursi dari seatMatrix & selectedSeats
     function renderSeats() {
         const container = document.getElementById('seatsContainer');
         if(!container) return;
@@ -547,11 +562,9 @@
         } else {
             selectedSeats.splice(index, 1);
         }
-        // update selected status di matrix (optional flag), tidak ubah available/unavailable
         renderSeats();
     }
 
-    // Update ringkasan + total harga (harga per tiket 50.000)
     const TICKET_PRICE = 50000;
     function updateSummaryAndTotal() {
         let movie = movies.find(m => m.id === selectedMovieId);
@@ -567,41 +580,37 @@
         document.getElementById('selectedSeatsLabel').innerText = seatLabels;
         document.getElementById('ticketCount').innerText = count;
         document.getElementById('totalAmount').innerText = `Rp${total.toLocaleString('id-ID')}`;
-        // simpan total untuk QRIS
         window.currentTotal = total;
-        window.currentBooking = { movieTitle, datetimeStr, seatLabels, count, total, customerName: '', phone: '' };
     }
 
-    function updateCustomerSummary() {
-        updateSummaryAndTotal();
-    }
-
-    // render film
+    // RENDER MOVIES DENGAN GAMBAR
     function renderMovies() {
         const grid = document.getElementById('moviesGrid');
         grid.innerHTML = '';
         movies.forEach(movie => {
             const card = document.createElement('div');
             card.className = `movie-card ${selectedMovieId === movie.id ? 'active' : ''}`;
+            // Gunakan posterUrl, jika error pakai fallback
+            const imgSrc = movie.posterUrl;
             card.innerHTML = `
-                <div class="movie-poster"><i class="fas fa-film" style="font-size:48px;"></i> ${movie.icon}</div>
+                <div class="movie-poster">
+                    <img src="${imgSrc}" alt="${movie.title}" loading="lazy" onerror="this.onerror=null;this.src='${movie.fallback}';">
+                </div>
                 <div class="movie-title">${movie.title}</div>
                 <div class="movie-meta">${movie.genre} • ${movie.duration}</div>
             `;
             card.addEventListener('click', () => {
                 selectedMovieId = movie.id;
                 renderMovies();
-                updateSummaryAndTotal();
-                // reset pilihan kursi jika film berganti (opsional tapi lebih rapi)
-                selectedSeats = [];
+                selectedSeats = [];  // reset kursi saat ganti film
                 renderSeats();
-                generateQrisReset(); // reset QR area
+                updateSummaryAndTotal();
+                generateQrisReset();
             });
             grid.appendChild(card);
         });
     }
 
-    // render tanggal
     function renderDates() {
         const container = document.getElementById('dateContainer');
         container.innerHTML = '';
@@ -636,10 +645,8 @@
         });
     }
 
-    // QRIS management
     let currentQr = null;
     function generateQrisReset() {
-        // Hapus QR code lama
         const qrDiv = document.getElementById('qrcode');
         qrDiv.innerHTML = '';
         document.getElementById('qrisInfo').innerHTML = 'Tekan tombol "Generate QRIS" untuk pembayaran';
@@ -647,7 +654,6 @@
     }
 
     function generateQRIS() {
-        // validasi kursi dan nama
         let nama = document.getElementById('customerName').value.trim();
         if(nama === "") {
             alert("⚠️ Masukkan Nama Pemesan terlebih dahulu!");
@@ -686,13 +692,12 @@
         }
     }
 
-    // konfirmasi pembayaran (finalisasi booking)
     function confirmPayment() {
         if(!window.lastOrder) {
             alert("🔔 Silahkan generate QRIS terlebih dahulu!");
             return;
         }
-        // cek apakah kursi yang dipesan masih available (tidak berubah status menjadi unavailable oleh pesanan lain di session ini)
+        // validasi ketersediaan kursi
         let allSeatsStillAvailable = true;
         for(let seat of window.lastOrder.seatsSnapshot) {
             let {rowIdx, colIdx} = seatToIndex(seat);
@@ -707,41 +712,28 @@
             renderSeats();
             return;
         }
-        // Proses booking: ubah kursi menjadi unavailable
+        // Booking sukses, ubah kursi menjadi unavailable
         for(let seat of window.lastOrder.seatsSnapshot) {
             let {rowIdx, colIdx} = seatToIndex(seat);
             if(rowIdx !== -1 && seatMatrix[rowIdx][colIdx] === 'available') {
                 seatMatrix[rowIdx][colIdx] = 'unavailable';
             }
         }
-        // Bersihkan pilihan kursi
         selectedSeats = [];
-        // Tampilkan tiket sukses
-        let totalBayar = window.lastOrder.total;
-        alert(`✅ PEMBAYARAN BERHASIL!\n🎟️ Tiket untuk ${window.lastOrder.movieTitle}\n📅 ${window.lastOrder.dateTime}\n💺 Kursi: ${window.lastOrder.seatsSnapshot.join(', ')}\n👤 Atas nama: ${window.lastOrder.customerName}\n💰 Total: Rp${totalBayar.toLocaleString('id-ID')}\nTerima kasih telah bertransaksi via QRIS CINEMAX!`);
-        // Reset QR area & hapus snapshot order
+        alert(`✅ PEMBAYARAN BERHASIL!\n🎟️ Tiket untuk ${window.lastOrder.movieTitle}\n📅 ${window.lastOrder.dateTime}\n💺 Kursi: ${window.lastOrder.seatsSnapshot.join(', ')}\n👤 Atas nama: ${window.lastOrder.customerName}\n💰 Total: Rp${window.lastOrder.total.toLocaleString('id-ID')}\nTerima kasih telah bertransaksi via QRIS CINEMAX!`);
         generateQrisReset();
         window.lastOrder = null;
-        // Refresh tampilan kursi & summary
         renderSeats();
         updateSummaryAndTotal();
-        // reset input nama? tidak perlu, tapi biarkan data terisi.
-        // Optional: clear order
     }
 
-    // Event listener tombol
-    document.getElementById('generateQrisBtn').addEventListener('click', () => {
-        generateQRIS();
-    });
-    document.getElementById('confirmPaymentBtn').addEventListener('click', () => {
-        confirmPayment();
-    });
-
-    // Ubah data customer -> update ringkasan (opsional)
+    // Event listeners
+    document.getElementById('generateQrisBtn').addEventListener('click', generateQRIS);
+    document.getElementById('confirmPaymentBtn').addEventListener('click', confirmPayment);
     document.getElementById('customerName').addEventListener('input', () => updateSummaryAndTotal());
     document.getElementById('customerPhone').addEventListener('input', () => updateSummaryAndTotal());
 
-    // inisialisasi awal
+    // Inisialisasi
     function init() {
         seatMatrix = initSeatMatrix();
         selectedSeats = [];
