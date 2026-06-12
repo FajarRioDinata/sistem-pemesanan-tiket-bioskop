@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Cinemax - Pesan Tiket & Makanan | QRIS Payment</title>
+    <title>Cinemax - Pesan Tiket & Makanan | Pesta Babi</title>
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -475,9 +474,10 @@
 
 <script>
     // ---------- DATA FILM (dengan poster) ----------
+    // Film DUNE PART TWO diganti dengan PESTA BABI
     const movies = [
         { id:1, title:"AVENGERS: ENDGAME", genre:"Action/Sci-Fi", duration:"181 min", posterUrl:"https://image.tmdb.org/t/p/w342/or06FN3Dka5tukK1e9sl16pB3iy.jpg", fallback:"https://via.placeholder.com/342x514?text=Avengers" },
-        { id:2, title:"DUNE: PART TWO", genre:"Epic/Sci-Fi", duration:"166 min", posterUrl:"https://image.tmdb.org/t/p/w342/8b8t8uTwNUCz1b6WrA5Uq7e7zWp.jpg", fallback:"https://via.placeholder.com/342x514?text=Dune+2" },
+        { id:2, title:"PESTA BABI", genre:"Komedi/Horor", duration:"110 min", posterUrl:"https://via.placeholder.com/342x514/8B4513/ffffff?text=Pesta+Babi", fallback:"https://via.placeholder.com/342x514/8B4513/ffffff?text=Pesta+Babi" },
         { id:3, title:"OPPENHEIMER", genre:"Biography/Drama", duration:"180 min", posterUrl:"https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", fallback:"https://via.placeholder.com/342x514?text=Oppenheimer" }
     ];
 
@@ -741,8 +741,7 @@
             if(rowIdx!==-1) seatMatrix[rowIdx][colIdx] = 'unavailable';
         }
         selectedSeats = [];
-        // Reset food cart? Biarkan atau reset? Setelah sukses lebih baik reset makanan opsional, tapi user dapat memesan lagi.
-        // Untuk UX, reset setelah bayar.
+        // Reset food cart
         foodCart = { popcorn:0, cola:0, nachos:0, water:0, hotdog:0 };
         renderFoodMenu();
         alert(`✅ PEMBAYARAN BERHASIL!\n🎟️ ${window.lastOrder.movieTitle}\n📅 ${window.lastOrder.dateTime}\n💺 Kursi: ${window.lastOrder.seatsSnapshot.join(', ')}\n🍿 Pesanan snack: ${Object.entries(window.lastOrder.foodCartSnapshot).filter(([k,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(', ') || '-'}\n👤 ${window.lastOrder.customerName}\n💰 Total Rp${window.lastOrder.total.toLocaleString('id-ID')}\nTerima kasih!`);
@@ -776,4 +775,3 @@
 </script>
 </body>
 </html>
-```
